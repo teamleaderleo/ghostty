@@ -15,25 +15,27 @@ const Text = extern struct {
     text_len: usize,
 };
 
-/// Read the complete OSC 133 semantic shell block under a visible viewport row.
-/// This is intentionally read-only: it does not change Ghostty's selection.
+/// Read the complete semantic terminal block under a surface-space point.
+/// Coordinates use the same top-left-origin convention as mouse-position input.
 pub export fn ghostty_surface_read_semantic_block(
     surface: *apprt.Surface,
-    viewport_row: u32,
+    x: f64,
+    y: f64,
     result: *Text,
 ) bool {
     const core_surface = &surface.core_surface;
+    const coordinate = core_surface.posToViewport(x, y);
+    if (coordinate.x < 0 or coordinate.y < 0) return false;
+
     core_surface.renderer_state.mutex.lockUncancelable(global.io());
     defer core_surface.renderer_state.mutex.unlock(global.io());
 
     const screen = &core_surface.renderer_state.terminal.screens.active;
     const pages = &screen.pages;
-    const viewport_top = pages.getTopLeft(.viewport);
-    const viewport_bottom = pages.getBottomRight(.viewport) orelse return false;
-
-    var at = viewport_top.down(viewport_row) orelse return false;
-    at.x = 0;
-    if (!at.isBetween(viewport_top, viewport_bottom)) return false;
+    const at = pages.pin(.{ .viewport = .{
+        .x = coordinate.x,
+        .y = coordinate.y,
+    } }) orelse return false;
 
     const block = semantic_block.bounds(pages, at) orelse return false;
     const selection: terminal.Selection = .{
