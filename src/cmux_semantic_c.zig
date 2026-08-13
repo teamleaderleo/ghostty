@@ -37,10 +37,7 @@ pub export fn ghostty_surface_read_semantic_block(
     } }) orelse return false;
 
     const block = semantic_block.bounds(pages, at) orelse return false;
-    const selection: terminal.Selection = .{
-        .bounds = .{ .untracked = block },
-        .rectangle = false,
-    };
+    const selection = terminal.Selection.init(block.start, block.end, false);
 
     const text = core_surface.dumpTextLocked(
         global.alloc(),
