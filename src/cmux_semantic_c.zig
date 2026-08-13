@@ -25,7 +25,6 @@ pub export fn ghostty_surface_read_semantic_block(
 ) bool {
     const core_surface = &surface.core_surface;
     const coordinate = core_surface.posToViewport(x, y);
-    if (coordinate.x < 0 or coordinate.y < 0) return false;
 
     core_surface.renderer_state.mutex.lockUncancelable(global.io());
     defer core_surface.renderer_state.mutex.unlock(global.io());
