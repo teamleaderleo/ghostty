@@ -29,7 +29,7 @@ pub export fn ghostty_surface_read_semantic_block(
     core_surface.renderer_state.mutex.lockUncancelable(global.io());
     defer core_surface.renderer_state.mutex.unlock(global.io());
 
-    const screen = &core_surface.renderer_state.terminal.screens.active;
+    const screen = core_surface.renderer_state.terminal.screens.active;
     const pages = &screen.pages;
     const at = pages.pin(.{ .viewport = .{
         .x = coordinate.x,
@@ -47,20 +47,25 @@ pub export fn ghostty_surface_read_semantic_block(
         return false;
     };
 
-    const viewport = text.viewport orelse .{
-        .tl_px_x = -1,
-        .tl_px_y = -1,
-        .offset_start = 0,
-        .offset_len = 0,
-    };
+    if (text.viewport) |viewport| {
+        result.* = .{
+            .tl_px_x = viewport.tl_px_x,
+            .tl_px_y = viewport.tl_px_y,
+            .offset_start = viewport.offset_start,
+            .offset_len = viewport.offset_len,
+            .text = text.text.ptr,
+            .text_len = text.text.len,
+        };
+    } else {
+        result.* = .{
+            .tl_px_x = -1,
+            .tl_px_y = -1,
+            .offset_start = 0,
+            .offset_len = 0,
+            .text = text.text.ptr,
+            .text_len = text.text.len,
+        };
+    }
 
-    result.* = .{
-        .tl_px_x = viewport.tl_px_x,
-        .tl_px_y = viewport.tl_px_y,
-        .offset_start = viewport.offset_start,
-        .offset_len = viewport.offset_len,
-        .text = text.text.ptr,
-        .text_len = text.text.len,
-    };
     return true;
 }
