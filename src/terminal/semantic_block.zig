@@ -2,16 +2,21 @@ const std = @import("std");
 const PageList = @import("PageList.zig");
 const highlight = @import("highlight.zig");
 
+const max_prompt_scan_rows = 2048;
+
 /// Return the full shell-integration block containing `at`:
 /// the first prompt row through the row immediately before the next prompt.
 ///
 /// This is intentionally read-only and returns untracked pins. Callers must
-/// hold the terminal state stable while using the result.
+/// hold the terminal state stable while using the result. The backward lookup
+/// is bounded so a hover inside a TUI cannot walk an unbounded scrollback when
+/// no nearby shell prompt metadata exists.
 pub fn bounds(pages: *const PageList, at: PageList.Pin) ?highlight.Untracked {
     const screen_top = pages.getTopLeft(.screen);
     const screen_bottom = pages.getBottomRight(.screen) orelse return null;
+    const scan_top = at.up(max_prompt_scan_rows) orelse screen_top;
 
-    var prior_prompts = at.promptIterator(.left_up, screen_top);
+    var prior_prompts = at.promptIterator(.left_up, scan_top);
     const start = prior_prompts.next() orelse return null;
 
     var later_prompts = start.promptIterator(.right_down, screen_bottom);
