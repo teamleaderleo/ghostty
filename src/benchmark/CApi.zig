@@ -1,8 +1,13 @@
 const std = @import("std");
 const cli = @import("cli.zig");
 const global = @import("../global.zig");
+const cmux_semantic_c = @import("../cmux_semantic_c.zig");
 
 const log = std.log.scoped(.benchmark);
+
+comptime {
+    _ = cmux_semantic_c.ghostty_surface_read_semantic_block;
+}
 
 /// Run the Ghostty benchmark CLI with the given action and arguments.
 export fn ghostty_benchmark_cli(
