@@ -29,10 +29,7 @@ pub fn bounds(pages: *const PageList, at: PageList.Pin) ?highlight.Untracked {
 test "semantic block spans prompt until next prompt" {
     const testing = std.testing;
 
-    var pages = try PageList.init(testing.allocator, .{
-        .cols = 8,
-        .rows = 4,
-    });
+    var pages = try PageList.init(testing.allocator, 8, 4, null);
     defer pages.deinit();
 
     const first_prompt = pages.pin(.{ .active = .{ .x = 0, .y = 0 } }).?;
@@ -50,13 +47,10 @@ test "semantic block spans prompt until next prompt" {
     try testing.expect(result.end.eql(expected_end));
 }
 
-test "latest prompt is not a completed block" {
+test "semantic block excludes the latest prompt" {
     const testing = std.testing;
 
-    var pages = try PageList.init(testing.allocator, .{
-        .cols = 8,
-        .rows = 4,
-    });
+    var pages = try PageList.init(testing.allocator, 8, 4, null);
     defer pages.deinit();
 
     const prompt = pages.pin(.{ .active = .{ .x = 0, .y = 1 } }).?;
