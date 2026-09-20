@@ -235,6 +235,27 @@ pub const path_regex =
 
 pub const regex = scheme_regex ++ "|" ++ path_regex;
 
+test "url regex localhost port punctuation" {
+    const testing = std.testing;
+    try oni.testing.ensureInit();
+    var re = try oni.Regex.init(scheme_regex, .{}, oni.Encoding.utf8, oni.Syntax.default, null);
+    defer re.deinit();
+
+    for ([_][]const u8{ "localhost:8000.", "localhost:8000. Next sentence", "localhost:8000," }) |value| {
+        var reg = try re.search(value, .{});
+        defer reg.deinit();
+        const match = value[@intCast(reg.starts()[0])..@intCast(reg.ends()[0])];
+        try testing.expectEqualStrings("localhost:8000", match);
+    }
+    for ([_][]const u8{ "localhost:8000.evil", "localhost:8000.evil/path", "localhost:8000.-evil" }) |value| {
+        var result = re.search(value, .{});
+        if (result) |*reg| {
+            reg.deinit();
+            return error.TestUnexpectedResult;
+        } else |_| {}
+    }
+}
+
 test "url regex bare localhost ports" {
     const testing = std.testing;
     try oni.testing.ensureInit();
